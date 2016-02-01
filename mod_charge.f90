@@ -1,7 +1,7 @@
       module mod_charge
       !
       ! Author: Vesselin Kolev <vesso.kolev@gmail.com>
-      ! Version: 2016020101
+      ! Version: 2016020102
       !
       ! The module mod_charge handles the atomic charges participating
       ! in the computation of the electrostatic potential.
@@ -25,6 +25,9 @@
       ! should be implemented:
       !
       ! k=N(i-1)-i(i+1)/2+j
+      !
+      ! The implementation of the conversion formula is the function
+      ! get_index defined in mod_t.f90
       !
       ! Note: Don't look for a subroutine to update the charges matrix
       ! during the sumulations. The atomic charges are constants and
