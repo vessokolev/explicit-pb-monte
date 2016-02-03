@@ -84,7 +84,7 @@ box_x=numpy.float(box_x)
 box_y=numpy.float(box_y)
 box_z=numpy.float(box_z)
 
-box_z-=2*numpy.float(d_gap_electrode)
+#box_z-=2*numpy.float(d_gap_electrode)
 
 lower_x=numpy.float(lower_x)
 lower_y=numpy.float(lower_y)
