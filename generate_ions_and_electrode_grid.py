@@ -53,6 +53,12 @@ number_of_the_grid_plane_in_z=5 # How many planes (in z-direction) the grid
                                 # plane contains on it certain amount of dummy
                                 # atoms. Their surface density is 1/d/d.
 
+# WARNING. If the protein grid membrane thickness is known in advance (in Angstroms)
+# the number_of_the_grid_plane_in_z should be computed as:
+#
+# number_of_the_grid_plane_in_z=int(thickness/d)
+
+
 # The path and name of the PDB file where the coordinates of the ions and grid
 # atoms are stored:
 
