@@ -1,7 +1,7 @@
       module mod_charge
       !
       ! Author: Vesselin Kolev <vesso.kolev@gmail.com>
-      ! Version: 2016020102
+      ! Version: 2016021001
       !
       ! The module mod_charge handles the atomic charges participating
       ! in the computation of the electrostatic potential.
@@ -12,48 +12,69 @@
 
       contains
 
-      subroutine init_charge_matrix(atoms,chargeM)
+      subroutine init_charge_matrix(atoms,params,chargeM)
       !
-      ! Computes the matrix of the atomic charges, each element of
-      ! which is the product qi*qj. The atomic charges are supplied
-      ! as a type property of pdbatoms. See mod_t.f90 for the complete
-      ! definitions of the type atom_t.
+      ! Computes the matrix of the atomic charges product, each element
+      ! of which is computed (for a certain atomic indexes i and j) as:
+      !
+      ! qi*qj
       !
       ! Because the matrix qi*qj is symmetric it can be represented as
-      ! an 1D array with N*(N-1)/2 element. To switch from indexes
-      ! i and j to the index of 1D array, k, the following conversion
-      ! should be implemented:
+      ! an 1D array with N1*(N1+1)/2 element (along with the elements
+      ! of the diagonal). To switch from indexes i and j to the index
+      ! of the 1D array, k, the function get_index_d introduced in
+      ! mod_t.f90 is implemented.
       !
-      ! k=N(i-1)-i(i+1)/2+j
+      ! NOTE: Don't look for a subroutine that updates the charges
+      ! matrix during the simulation because the atomic charges remain
+      ! constant.
       !
-      ! The implementation of the conversion formula is the function
-      ! get_index defined in mod_t.f90
       !
-      ! Note: Don't look for a subroutine to update the charges matrix
-      ! during the sumulations. The atomic charges are constants and
-      ! they do not change here.
+      ! Arguments:
+      !
+      ! atoms - 1D array of atom_t type elements representing the atoms
+      !         defined in the system. The properties of the atoms are
+      !         described and the properties of the atom_t type in the
+      !         module mod_t.f90.
+      !
+      ! params - the parameters of the simulations. More details can be
+      !          found in the description of the type param_t in the
+      !          module mod_t.f90.
+      !
+      ! chargeM - 1D array of size N1*(N1+1)/2 used to store both
+      !           diagonal elements and those above the diagonal of the
+      !           atomic charge product matrix.
       !
       type(atom_t), dimension(:), intent(in) :: atoms
+      type(param_t), intent(in) :: params
       real(kind=real32), dimension(:), allocatable, intent(out) :: &
        chargeM
-      integer(kind=int32) :: N
       integer(kind=int32) :: i,j
 
-      N=size(atoms,1)
+      allocate(chargeM(params%N1*(params%N1+1)/2))
 
-      allocate(chargeM(N*(N-1)/2))
-
-      do i=1,N-1
-         do j=i+1,N
-            chargeM(get_index(i,j,N))=atoms(i)%charge*&
-                                      atoms(j)%charge
+      do i=1,params%N1
+         do j=i,params%N1
+            chargeM(get_index_d(i,j,params%N1))=atoms(i)%charge*&
+                                                atoms(j)%charge
          end do
       end do
 
       end subroutine init_charge_matrix
 
 
-      subroutine init_charge_matrix_el(atoms,grid,chargeM_el)
+      subroutine init_charge_matrix_el(atoms,grid,params,chargeM_el)
+      !
+      ! Computes the analogue of chargeM matrix (see the subroutune
+      ! init_charge_matrix introduced above) in the case of two groups
+      ! of atoms charges - the first one contains the atomic charges
+      ! of the atoms inside the simulation box, and the second group
+      ! represents the atomic charges of the grid atoms (placed on the
+      ! planes of the electrodes). In this particular case the matrix
+      ! of the atomic charges qi*qj (here i is the index of the
+      ! elements of the first group, and j - of the second one) is not
+      ! symmetric. So it is not possible to apply the simplification
+      ! used for chargeM matrix (above).
       !
       ! Computes the matrix of the atomic charges, each element of
       ! which is the product qi*qj. Here index i denotes atoms inside
@@ -68,20 +89,17 @@
       !
       type(atom_t), dimension(:), intent(in) :: atoms
       type(el_atom_t), dimension(:), allocatable :: grid
+      type(param_t), intent(in) :: params
       real(kind=real32), dimension(:,:), allocatable, intent(out) :: &
        chargeM_el
-      integer(kind=int32) :: N1,N2
       integer(kind=int32) :: i,j
 
-      N1=size(atoms)
-      N2=size(grid)
+      allocate(chargeM_el(params%N1,2))
 
-      allocate(chargeM_el(N1,N2))
-
-      do i=1,N1
-         do j=1,N2
-            chargeM_el(i,j)=atoms(i)%charge*&
-                            grid(j)%charge
+      do i=1,params%N1
+         do j=1,params%N2
+            chargeM_el(i,grid(j)%plane_id)=atoms(i)%charge*&
+            params%dummy_atom_charge(grid(j)%plane_id)
          end do
       end do
 
