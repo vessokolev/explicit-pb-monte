@@ -1,7 +1,7 @@
       module mod_input
       !
       ! Author: Vesselin Kolev <vesso.kolev@gmail.com>
-      ! Version: 2016020301
+      ! Version: 2016021001
       !
       ! This module handles the input file and extracts from there
       ! the parameters of the simulation as well as the atomic
@@ -36,11 +36,17 @@
       read(1,fmt="(I12)") params%accept_proposals
       read(1,fmt="(I5)") params%num_box_img_layers
       read(1,fmt="(F12.8)") params%LJ_cutoff
-      read(1,fmt="(I5)") numatoms
+      read(1,fmt="(F12.8)") params%left_mem_gap_pos
+      read(1,fmt="(F12.8)") params%right_mem_gap_pos
+      read(1,fmt="(I5)") params%N1
 
-      allocate(atoms(numatoms))
+      params%left_el_gap_pos=params%core_dist_el
+      params%right_el_gap_pos=params%box(3)-params%core_dist_el
+      params%half_box=params%box/2
 
-      do i=1,numatoms
+      allocate(atoms(params%N1))
+
+      do i=1,params%N1
          read(1,fmt="(I5,A3,A4,3F8.3,2F12.8,I5,F8.3)") atoms(i)%anum,&
           atoms(i)%resname,atoms(i)%aname,atoms(i)%x,atoms(i)%y,&
           atoms(i)%z,atoms(i)%sigma,atoms(i)%eps,atoms(i)%spatial_grp,&
